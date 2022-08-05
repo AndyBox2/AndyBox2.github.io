@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <link rel="stylesheet" href="CSS.css"/>
+<body>
+  <div id="header">
+      <h1 id="headerText">Domain Scanner!</h1>
+  </div>
+  <div id="form">
+    <form method="post" id="inputForm">
+      Domain: <input type="text" id="domain" name="domain"/></br>
+      <input type="submit" name="submit" id="submit" value="RUN" />
+    </form>
+</div>
+  
+  <?php
+  if(array_key_exists('submit',$_POST)){
+    if(isset($_POST['domain'])):
+      $val1 = $_POST["domain"];
+      vtAPI($val1);
+      getImage($val1);
+    endif;
+  }
+
+  function vtAPI($domain){
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, 'http://www.virustotal.com/vtapi/v2/url/report');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    $post = array(
+        'apikey' => "732d9f9b77f640c60e47c2aa01fc7b2eb872e526ec28c2cfc2ee5401ae952e6d",
+        'resource' => $domain
+    );
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+
+    $result = curl_exec($ch);
+
+    curl_close($ch);
+    $json = json_decode($result);
+    $score = $json->positives;
+    $total = $json->total;
+    print '<div id=boxes>
+            <div id="vtScoreBox">
+              <p id=topText>Virus Total Scores</p>
+              <p id=scoreText>'.$score.'/'.$total.'</p>
+            </div>
+          </div>';
+    
+  }
+
+  function getImage($domain){
+    $googleApiKey = 'AIzaSyBJxwQ_zs1Fu6-ENdNlQNoJn60d5OWNjFk'; 
+
+    $siteURL = "https://www.$domain";
+
+    // Call Google PageSpeed Insights API 
+    $googlePagespeedData = file_get_contents("https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=$siteURL&screenshot=true&key=$googleApiKey"); 
+    
+    // Decode json data 
+    $googlePagespeedData = json_decode($googlePagespeedData, true); 
+    
+    // Retrieve screenshot image data 
+    $screenshot_data = $googlePagespeedData['lighthouseResult']['audits']['final-screenshot']['details']['data']; 
+    
+    // Display screenshot image 
+    print '<div id=boxes><div id=imageBox> <img id=liveScreenshot src="'.$screenshot_data.'" /></div></div>';
+  }
+?>
+<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+</body>
+</html>
